@@ -49,8 +49,7 @@
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
             "buildToolsVersion": "35.0.0",
-            "minSdkVersion": 24,
-            "kotlinVersion": "2.0.21"
+            "minSdkVersion": 24
           },
           "ios": {
             "deploymentTarget": "15.1"
