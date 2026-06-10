@@ -1,7 +1,0 @@
-Colocar en esta carpeta:
-- logo.png (logo del club, al menos 200x200px)
-- icon.png (1024x1024px, fondo rojo #C8102E con logo blanco)
-- splash.png (1284x2778px para Expo, fondo rojo #C8102E)
-- adaptive-icon.png (1024x1024px, solo el logo sin fondo)
-- notification-icon.png (96x96px, ícono blanco sobre transparente)
-- favicon.png (48x48px)

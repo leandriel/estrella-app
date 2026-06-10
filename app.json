@@ -5,63 +5,42 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "scheme": "estrella-del-sur",
     "userInterfaceStyle": "light",
+    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#C8102E"
+      "backgroundColor": "#FFFFFF"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.estrelladelsur.app",
-      "buildNumber": "1"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.estrelladelsur.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#C8102E"
+        "backgroundColor": "#FFFFFF"
       },
-      "package": "com.estrelladelsur.app",
-      "versionCode": 1,
-      "permissions": [
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE",
-        "POST_NOTIFICATIONS"
-      ],
-      "googleServicesFile": "./google-services.json"
+      "package": "com.estrelladelsur.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "bundler": "metro",
+      "favicon": "./assets/icon.png"
     },
     "plugins": [
+      "expo-router",
       [
-        "expo-notifications",
+        "expo-splash-screen",
         {
-          "icon": "./assets/notification-icon.png",
-          "color": "#C8102E",
-          "sounds": []
-        }
-      ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "compileSdkVersion": 36,
-            "targetSdkVersion": 35,
-            "buildToolsVersion": "36.0.0",
-            "minSdkVersion": 24
-          },
-          "ios": {
-            "deploymentTarget": "15.1"
-          }
+          "backgroundColor": "#FFFFFF",
+          "image": "./assets/icon.png",
+          "imageWidth": 200
         }
       ]
     ],
-    "extra": {
-      "eas": {
-        "projectId": "b0ab86b2-be82-4219-be4a-19eb204574bb"
-      }
-    },
-    "owner": "leandroid88"
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }
