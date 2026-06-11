@@ -5,12 +5,12 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function userProfile() {
+    function getUser() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid));
     }
 
     function hasPermission(permission) {
-      return isAuthenticated() && userProfile().exists && userProfile().data.permissions[permission] == true;
+      return isAuthenticated() && getUser().data.permissions[permission] == true;
     }
 
     function isOwnUser(userId) {

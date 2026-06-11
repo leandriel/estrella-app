@@ -7,11 +7,13 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "deploy:firebase": "firebase deploy --only firestore:rules"
+    "deploy:firebase": "firebase deploy --only firestore:rules",
+    "seed:categories": "node scripts/seed_categories.js"
   },
   "dependencies": {
     "@expo/log-box": "~56.0.12",
     "@expo/metro-runtime": "~56.0.14",
+    "@react-native-async-storage/async-storage": "^3.1.1",
     "expo": "~56.0.9",
     "expo-constants": "~56.0.17",
     "expo-linking": "~56.0.13",

@@ -193,6 +193,9 @@ export default function DashboardScreen() {
               <Text style={styles.sectionTitle}>Acciones rápidas</Text>
               <ActionButton label="Crear fixture" enabled={can('createFixture')} />
               <ActionButton label="Crear noticias" enabled={can('createNews')} />
+              <ActionButton label="Crear usuario" enabled={can('createUser')} onPress={() => router.push('/admin/create-user')} />
+              <ActionButton label="Gestionar usuarios" enabled={can('modifyUser')} onPress={() => router.push('/admin/users')} />
+              <ActionButton label="Administrar categorías" enabled={can('createCategory') || can('modifyCategory')} onPress={() => router.push('/admin/categories')} />
               <ActionButton label="Iniciar partido en vivo" enabled={can('startLiveMatch')} />
               <ActionButton label="Ver cuotas" enabled={can('viewPayments')} />
             </View>
