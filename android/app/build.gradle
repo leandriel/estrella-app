@@ -194,6 +194,33 @@ task patchAutolinkingForWindowsPaths {
             cppFile.text = content
             println "[Windows workaround] Patched autolinking.cpp"
         }
+
+        // 3. Patch generated CMake/Gradle metadata to remove a stale gesture handler build target
+        def patchCmakeJson = { File jsonFile ->
+            if (!jsonFile.exists()) {
+                return
+            }
+
+            def json = new groovy.json.JsonSlurper().parse(jsonFile)
+            if (json.libraries instanceof Map) {
+                def removedKeys = json.libraries.keySet().findAll { key ->
+                    key.contains("react_codegen_rngesturehandler_codegen")
+                }
+                removedKeys.each { json.libraries.remove(it) }
+            }
+            if (json.buildFiles instanceof List) {
+                json.buildFiles = json.buildFiles.findAll { entry ->
+                    !entry.toString().contains("react-native-gesture-handler${File.separator}android${File.separator}CMakeLists.txt") &&
+                    !entry.toString().contains("react-native-gesture-handler/android/CMakeLists.txt")
+                }
+            }
+            jsonFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json)) + "\n"
+            println "[Windows workaround] Patched ${jsonFile.name}"
+        }
+
+        def metadataDir = new File(projectDir, ".cxx/Debug/1k3o2z4s/arm64-v8a")
+        patchCmakeJson(new File(metadataDir, "android_gradle_build.json"))
+        patchCmakeJson(new File(metadataDir, "android_gradle_build_mini.json"))
     }
 }
 
