@@ -1,4 +1,4 @@
-import { collection, getDocs, query, where, doc, getDoc, updateDoc, serverTimestamp, deleteField } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, getDoc, updateDoc, serverTimestamp, deleteField, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { db } from './firebase';
 
 export type RoleName = 'admin' | 'subadmin' | 'user';
@@ -153,6 +153,30 @@ export function buildUserPermissions(roles: Roles): Permissions {
   }
 
   return permissions;
+}
+
+export async function fetchAllPlayers(): Promise<UserProfile[]> {
+  const q = query(collection(db, 'users'), where('isPlayer', '==', true));
+  const snapshot = await getDocs(q);
+  return snapshot.docs
+    .map((d) => ({ id: d.id, ...d.data() } as UserProfile))
+    .sort(
+      (a, b) =>
+        (a.surname ?? '').localeCompare(b.surname ?? '') ||
+        (a.name ?? '').localeCompare(b.name ?? '')
+    );
+}
+
+export async function addPlayerToCategory(uid: string, categoryId: string): Promise<void> {
+  await updateDoc(doc(db, 'users', uid), {
+    'playerProfile.categories': arrayUnion(categoryId),
+  });
+}
+
+export async function removePlayerFromCategory(uid: string, categoryId: string): Promise<void> {
+  await updateDoc(doc(db, 'users', uid), {
+    'playerProfile.categories': arrayRemove(categoryId),
+  });
 }
 
 export async function fetchAllUsers(): Promise<UserProfile[]> {

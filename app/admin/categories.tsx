@@ -280,6 +280,23 @@ export default function AdminCategoriesScreen() {
                   <Text style={styles.categoryMeta}>{category.league} · Orden {category.order}</Text>
                 </View>
                 <View style={styles.categoryActions}>
+                  <TouchableOpacity
+                    onPress={() =>
+                      router.push({
+                        pathname: '/admin/category-players',
+                        params: {
+                          categoryId: category.id,
+                          displayName: category.displayName,
+                          league: category.league,
+                          surface: category.surface,
+                        },
+                      })
+                    }
+                    style={styles.playersButton}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={styles.playersText}>Jugadores</Text>
+                  </TouchableOpacity>
                   <TouchableOpacity onPress={() => handleEdit(category)} style={styles.editButton} activeOpacity={0.8}>
                     <Text style={styles.editText}>Editar</Text>
                   </TouchableOpacity>
@@ -449,8 +466,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 8,
   },
+  playersButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 12,
+    backgroundColor: '#E8F6EF',
+  },
+  playersText: {
+    color: '#2E7D32',
+    fontWeight: '700',
+    fontSize: 12,
+  },
   editButton: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 12,
     backgroundColor: '#EFF7FF',
@@ -458,6 +486,7 @@ const styles = StyleSheet.create({
   editText: {
     color: Colors.secondary,
     fontWeight: '700',
+    fontSize: 12,
   },
   deleteButton: {
     paddingHorizontal: 12,
@@ -468,6 +497,7 @@ const styles = StyleSheet.create({
   deleteText: {
     color: Colors.primary,
     fontWeight: '700',
+    fontSize: 12,
   },
   alertError: {
     backgroundColor: '#FDE2E5',
