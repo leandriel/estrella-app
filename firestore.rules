@@ -1,0 +1,70 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function userProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function hasPermission(permission) {
+      return isAuthenticated() && userProfile().exists && userProfile().data.permissions[permission] == true;
+    }
+
+    function isOwnUser(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function safeUserSelfUpdate(userId) {
+      return isOwnUser(userId)
+        && request.resource.data.roles == resource.data.roles
+        && request.resource.data.permissions == resource.data.permissions;
+    }
+
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwnUser(userId) || hasPermission('modifyUser'));
+      allow create: if hasPermission('createUser');
+      allow update: if hasPermission('modifyUser') || safeUserSelfUpdate(userId);
+      allow delete: if hasPermission('modifyUser');
+    }
+
+    match /fixtures/{fixtureId} {
+      allow read: if hasPermission('viewFixtures');
+      allow create: if hasPermission('createFixture');
+      allow update: if hasPermission('modifyFixture');
+      allow delete: if hasPermission('deleteFixture');
+    }
+
+    match /news/{newsId} {
+      allow read: if hasPermission('viewNews');
+      allow create: if hasPermission('createNews');
+      allow update: if hasPermission('modifyNews');
+      allow delete: if hasPermission('deleteNews');
+    }
+
+    match /categories/{categoryId} {
+      allow read: if isAuthenticated();
+      allow create: if hasPermission('createCategory');
+      allow update: if hasPermission('modifyCategory') || hasPermission('addPlayerToCategory');
+      allow delete: if hasPermission('deleteCategory');
+    }
+
+    match /liveMatches/{matchId} {
+      allow read: if hasPermission('viewLiveMatches');
+      allow create: if hasPermission('startLiveMatch');
+      allow update: if hasPermission('modifyLiveScore');
+      allow delete: if hasPermission('modifyLiveScore');
+    }
+
+    match /payments/{paymentId} {
+      allow read: if hasPermission('viewPayments');
+      allow create, update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

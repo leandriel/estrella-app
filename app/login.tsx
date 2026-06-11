@@ -14,6 +14,8 @@ import {
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 import { Colors } from '../constants/Colors';
 
 export default function LoginScreen() {
@@ -22,18 +24,29 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim() || !password.trim()) {
       setError('Por favor completá todos los campos.');
       return;
     }
     setError('');
     setLoading(true);
-    // TODO: conectar con Firebase Auth
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password.trim());
       router.replace('/dashboard');
-    }, 1200);
+    } catch (e: any) {
+      const code: string = e?.code ?? '';
+      if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+        setError('Email o contraseña incorrectos.');
+      } else if (code === 'auth/invalid-email') {
+        setError('El email no es válido.');
+      } else if (code === 'auth/too-many-requests') {
+        setError('Demasiados intentos. Intentá más tarde.');
+      } else {
+        setError('Error al iniciar sesión. Intentá de nuevo.');
+      }
+      setLoading(false);
+    }
   };
 
   return (

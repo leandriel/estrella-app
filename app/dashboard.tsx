@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +10,9 @@ import {
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth } from '../lib/firebase';
+import { fetchUserProfileByUID, hasPermission, UserProfile, Permissions } from '../lib/user';
 import { Colors } from '../constants/Colors';
 
 type StatCardProps = { icon: string; value: string; label: string };
@@ -24,6 +28,30 @@ function StatCard({ icon, value, label }: StatCardProps) {
 }
 
 type NewsCardProps = { title: string; body: string; date: string; isNew?: boolean };
+
+type ActionButtonProps = { label: string; enabled?: boolean; onPress?: () => void };
+
+function ActionButton({ label, enabled = true, onPress }: ActionButtonProps) {
+  return (
+    <TouchableOpacity
+      style={[styles.actionButton, !enabled && styles.actionButtonDisabled]}
+      onPress={onPress}
+      disabled={!enabled}
+      activeOpacity={0.8}
+    >
+      <Text style={styles.actionButtonText}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function PermissionBadge({ label, enabled }: { label: string; enabled: boolean }) {
+  return (
+    <View style={[styles.permissionItem, enabled ? styles.permissionActiveCard : styles.permissionInactiveCard]}>
+      <Text style={styles.permissionItemLabel}>{label}</Text>
+      <Text style={styles.permissionItemValue}>{enabled ? 'SI' : 'NO'}</Text>
+    </View>
+  );
+}
 
 function NewsCard({ title, body, date, isNew }: NewsCardProps) {
   return (
@@ -41,7 +69,81 @@ function NewsCard({ title, body, date, isNew }: NewsCardProps) {
 }
 
 export default function DashboardScreen() {
-  const handleLogout = () => {
+  const [userName, setUserName] = useState('Socio');
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserName(user.displayName ?? user.email?.split('@')[0] ?? 'Socio');
+        loadUserProfile(user);
+      } else {
+        router.replace('/login');
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  const loadUserProfile = async (user: FirebaseUser) => {
+    setLoadingProfile(true);
+    const loadedProfile = await fetchUserProfileByUID(user.uid);
+    setProfile(loadedProfile);
+    setLoadingProfile(false);
+  };
+
+  const can = (permission: keyof Permissions) => {
+    return hasPermission(profile, permission);
+  };
+
+  const permissionGroups: Array<{
+    title: string;
+    items: { permission: keyof Permissions; label: string }[];
+  }> = [
+    {
+      title: 'Fixtures',
+      items: [
+        { permission: 'createFixture', label: 'Crear fixture' },
+        { permission: 'modifyFixture', label: 'Modificar fixture' },
+        { permission: 'deleteFixture', label: 'Eliminar fixture' },
+      ],
+    },
+    {
+      title: 'Noticias',
+      items: [
+        { permission: 'createNews', label: 'Crear noticias' },
+        { permission: 'modifyNews', label: 'Modificar noticias' },
+        { permission: 'deleteNews', label: 'Eliminar noticias' },
+      ],
+    },
+    {
+      title: 'Categorías',
+      items: [
+        { permission: 'createCategory', label: 'Crear categoría' },
+        { permission: 'modifyCategory', label: 'Modificar categoría' },
+        { permission: 'deleteCategory', label: 'Eliminar categoría' },
+      ],
+    },
+    {
+      title: 'Otras acciones',
+      items: [
+        { permission: 'startLiveMatch', label: 'Iniciar partido' },
+        { permission: 'modifyLiveScore', label: 'Modificar marcador' },
+      ],
+    },
+    {
+      title: 'Permisos de lectura',
+      items: [
+        { permission: 'viewFixtures', label: 'Ver fixtures' },
+        { permission: 'viewLiveMatches', label: 'Ver partidos' },
+        { permission: 'viewNews', label: 'Ver noticias' },
+        { permission: 'viewPayments', label: 'Ver cuotas' },
+      ],
+    },
+  ];
+
+  const handleLogout = async () => {
+    await signOut(auth);
     router.replace('/login');
   };
 
@@ -70,9 +172,50 @@ export default function DashboardScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeTitle}>¡Bienvenido al Club!</Text>
+          <Text style={styles.welcomeTitle}>¡Bienvenido, {userName}!</Text>
           <Text style={styles.welcomeSub}>Temporada 2025 · Socio activo</Text>
+          {loadingProfile ? (
+            <Text style={styles.profileStatus}>Cargando perfil...</Text>
+          ) : profile ? (
+            <Text style={styles.profileStatus}>
+              Roles: {profile.roles?.admin ? 'Admin ' : ''}
+              {profile.roles?.subadmin ? 'Subadmin ' : ''}
+              {profile.roles?.user ? 'Usuario' : ''}
+            </Text>
+          ) : (
+            <Text style={styles.profileStatus}>Perfil no encontrado</Text>
+          )}
         </View>
+
+        {profile && (
+          <>
+            <View style={styles.actionList}>
+              <Text style={styles.sectionTitle}>Acciones rápidas</Text>
+              <ActionButton label="Crear fixture" enabled={can('createFixture')} />
+              <ActionButton label="Crear noticias" enabled={can('createNews')} />
+              <ActionButton label="Iniciar partido en vivo" enabled={can('startLiveMatch')} />
+              <ActionButton label="Ver cuotas" enabled={can('viewPayments')} />
+            </View>
+
+            <View style={styles.permissionsBlock}>
+              <Text style={styles.sectionTitle}>Permisos detallados</Text>
+              {permissionGroups.map((group) => (
+                <View key={group.title} style={styles.permissionGroup}>
+                  <Text style={styles.permissionGroupTitle}>{group.title}</Text>
+                  <View style={styles.permissionsGrid}>
+                    {group.items.map((item) => (
+                      <PermissionBadge
+                        key={item.permission}
+                        label={item.label}
+                        enabled={can(item.permission)}
+                      />
+                    ))}
+                  </View>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
 
         <Text style={styles.sectionTitle}>Resumen</Text>
         <View style={styles.statsRow}>
@@ -247,6 +390,76 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: Colors.inputBorder,
     fontStyle: 'italic',
+  },
+  profileStatus: {
+    marginTop: 12,
+    color: Colors.white,
+    opacity: 0.9,
+    fontSize: 13,
+  },
+  actionList: {
+    marginBottom: 24,
+  },
+  actionButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  actionButtonDisabled: {
+    backgroundColor: Colors.lightGray,
+  },
+  actionButtonText: {
+    color: Colors.white,
+    fontWeight: '700',
+  },
+  permissionsBlock: {
+    marginBottom: 24,
+  },
+  permissionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  permissionItem: {
+    width: '48%',
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  permissionItemLabel: {
+    fontSize: 12,
+    color: Colors.darkGray,
+    marginBottom: 6,
+  },
+  permissionItemValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.primary,
+  },
+  permissionInactiveCard: {
+    backgroundColor: '#F3F3F3',
+  },
+  permissionActiveCard: {
+    backgroundColor: '#E7F5FF',
+  },
+  permissionGroup: {
+    marginBottom: 16,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E8EDF7',
+  },
+  permissionGroupTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Colors.darkGray,
+    marginBottom: 10,
   },
   logoutBtn: {
     borderWidth: 1.5,
