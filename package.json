@@ -8,7 +8,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "deploy:firebase": "firebase deploy --only firestore:rules",
-    "seed:categories": "node scripts/seed_categories.js"
+    "seed:categories": "node scripts/seed_categories.js",
+    "seed:fixture:2016": "node scripts/seed_fixture_2016.js"
   },
   "dependencies": {
     "@expo/log-box": "~56.0.12",

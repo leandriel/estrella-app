@@ -14,6 +14,7 @@ import { signOut, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth
 import { auth } from '../lib/firebase';
 import { fetchUserProfileByUID, hasPermission, UserProfile, Permissions } from '../lib/user';
 import { Colors } from '../constants/Colors';
+import MatchDayWidget from '../components/MatchDayWidget';
 
 type StatCardProps = { icon: string; value: string; label: string };
 
@@ -186,6 +187,9 @@ export default function DashboardScreen() {
             <Text style={styles.profileStatus}>Perfil no encontrado</Text>
           )}
         </View>
+
+        <Text style={styles.sectionTitle}>Partidos</Text>
+        <MatchDayWidget profile={profile} />
 
         {profile && (
           <>
