@@ -167,6 +167,11 @@ export async function fetchAllPlayers(): Promise<UserProfile[]> {
     );
 }
 
+export async function fetchPlayersByCategory(categoryId: string): Promise<UserProfile[]> {
+  const all = await fetchAllPlayers();
+  return all.filter(p => p.playerProfile?.categories?.includes(categoryId));
+}
+
 export async function addPlayerToCategory(uid: string, categoryId: string): Promise<void> {
   await updateDoc(doc(db, 'users', uid), {
     'playerProfile.categories': arrayUnion(categoryId),
